@@ -34,25 +34,21 @@ app.secret_key = os.getenv("SECRET", "randomstring123")
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    if sessions.get_session() is None: nickname = "Аноним"
+    else: nickname = sessions.get_session()
+
     if request.method == "POST":
         form_message = request.form["text-message"]
         form_nickname = request.form["nickname-user"]
-
         nickname = form_nickname
-        if 'username' in session:
-            if form_nickname == '':
-                nickname = sessions.get_session()
-            else:
-                sessions.set_session(form_nickname)
-        else:
-            if nickname == '': nickname = 'Анонимус'
-            sessions.set_session(form_nickname)
+        if 'username' in session and form_nickname != '' or 'username' not in session:
+                sessions.set_session(nickname)
 
         chat.create_message(form_message, nickname)
         return redirect(url_for("index"))
 
     messages = chat.load_chat()
-    return render_template("chat.html", messages=messages)
+    return render_template("chat.html", messages=messages, nickname = nickname)
 
 if __name__ == '__main__':
     app.run(debug=True)
